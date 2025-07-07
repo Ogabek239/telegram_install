@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 import logging
 import instaloader
 import shutil
@@ -6,7 +7,9 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
 # Bot tokeningizni shu yerga yozing
-BOT_TOKEN = "7828776302:AAF7AsIIMT2mvUXXfE5yVCpCg0E5CEXRfTM"
+load_dotenv()  # .env faylni yuklaydi
+
+BOT_TOKEN = os.getenv("token")
 
 # Logging sozlamasi
 logging.basicConfig(level=logging.INFO)
