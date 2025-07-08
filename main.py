@@ -6,19 +6,18 @@ import shutil
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
-# Bot tokeningizni shu yerga yozing
-load_dotenv()  # .env faylni yuklaydi
-
+# .env faylni yuklash
+load_dotenv()
 BOT_TOKEN = os.getenv("token")
 
-# Logging sozlamasi
+# Log sozlamasi
 logging.basicConfig(level=logging.INFO)
 
 # /start komandasi
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Salom! Instagram videoning linkini yuboring (reel yoki post).")
+    await update.message.reply_text("👋 Salom! Instagram'dan video yuborishim uchun post yoki reel linkni yuboring.")
 
-# Video yuklash funksiyasi
+# Video yuklab beruvchi funksiya
 async def download_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
     url = update.message.text.strip()
 
@@ -26,18 +25,20 @@ async def download_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Bu Instagram linki emas.")
         return
 
-    await update.message.reply_text("⏳ Yuklab olinmoqda...")
+    await update.message.reply_text("⏳ Video yuklab olinmoqda...")
 
     try:
-        # instaloader sozlamalari
+        # Instaloader sozlamasi
         loader = instaloader.Instaloader(
             download_videos=True,
             save_metadata=False,
             dirname_pattern="video"
         )
 
+        # Instagram sessiyani yuklash (cookie orqali)
+        loader.load_session_from_file("vision_samarqand")
+
         # Shortcode ajratish
-        shortcode = ""
         if "/reel/" in url:
             shortcode = url.split("/reel/")[-1].split("/")[0]
         elif "/p/" in url:
@@ -50,7 +51,7 @@ async def download_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
         post = instaloader.Post.from_shortcode(loader.context, shortcode)
         loader.download_post(post, target="video")
 
-        # Video faylni topish va yuborish
+        # Video faylni topish
         video_path = None
         if os.path.exists("video"):
             for file in os.listdir("video"):
@@ -58,6 +59,7 @@ async def download_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     video_path = os.path.join("video", file)
                     break
 
+        # Video yuborish
         if video_path:
             with open(video_path, 'rb') as f:
                 await update.message.reply_video(f)
@@ -65,9 +67,9 @@ async def download_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("❌ Video topilmadi.")
 
     except Exception as e:
-        await update.message.reply_text(f"❌ Xatolik: {e}")
+        await update.message.reply_text(f"❌ Xatolik yuz berdi:\n{e}")
 
-    # 🧹 Tozalash (video papkani butunlay o‘chirish)
+    # Tozalash
     if os.path.exists("video"):
         shutil.rmtree("video", ignore_errors=True)
 
